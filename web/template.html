@@ -1,0 +1,767 @@
+<title>Bascule</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --ground: #eceff4;
+  --panel: #fbfcfd;
+  --ink: #141a24;
+  --ink-2: #4a5466;
+  --ink-3: #737d90;
+  --rule: #d5dae3;
+  --frame: #1d3557;
+  --frame-edge: #152844;
+  --hole: #e3e8ef;
+  --you: #f0a92e;
+  --you-edge: #c98716;
+  --ai: #27aebb;
+  --ai-edge: #1a8591;
+  --accent: #1d3557;
+  --accent-ink: #ffffff;
+  --win: #ffffff;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --surface-chart: #fcfcfb;
+  --grid: #e4e7ec;
+  --good: #1f7a3a;
+  --bad: #b3261e;
+  --display: "Unbounded", "Trebuchet MS", system-ui, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ground: #10141b;
+    --panel: #181e27;
+    --ink: #e9edf3;
+    --ink-2: #b3bccb;
+    --ink-3: #8a94a6;
+    --rule: #2b3442;
+    --frame: #24426b;
+    --frame-edge: #1a3354;
+    --hole: #0d1117;
+    --accent: #8fb3e6;
+    --accent-ink: #0d1117;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --surface-chart: #1a1a19;
+    --grid: #2c323c;
+    --good: #5cc07a;
+    --bad: #f08b84;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #10141b;
+  --panel: #181e27;
+  --ink: #e9edf3;
+  --ink-2: #b3bccb;
+  --ink-3: #8a94a6;
+  --rule: #2b3442;
+  --frame: #24426b;
+  --frame-edge: #1a3354;
+  --hole: #0d1117;
+  --accent: #8fb3e6;
+  --accent-ink: #0d1117;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --surface-chart: #1a1a19;
+  --grid: #2c323c;
+  --good: #5cc07a;
+  --bad: #f08b84;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.5;
+  padding-inline: 16px;
+  padding-block: 28px 48px;
+}
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 28px; }
+
+header { display: grid; gap: 6px; }
+h1 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(34px, 6vw, 56px);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin: 0;
+}
+h1 .tilt { display: inline-block; transform: rotate(-8deg); transform-origin: 50% 80%; color: var(--you); }
+.lede { margin: 0; color: var(--ink-2); max-width: 62ch; font-size: 16px; }
+
+.main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 28px; align-items: start; }
+@media (max-width: 860px) { .main { grid-template-columns: minmax(0, 1fr); } }
+
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+}
+h2 {
+  font-family: var(--display);
+  font-weight: 500;
+  font-size: 19px;
+  letter-spacing: -0.01em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+/* ---------- Plateau ---------- */
+.game { display: grid; gap: 14px; }
+.status { display: flex; align-items: center; gap: 10px; min-height: 28px; font-weight: 500; }
+.status .dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+.status.win { color: var(--good); }
+.status.lose { color: var(--bad); }
+
+.stage { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.tiltbtn {
+  display: grid; justify-items: center; gap: 4px;
+  background: none; border: 1px solid var(--rule); border-radius: 10px;
+  color: var(--ink); font: inherit; font-size: 12px; padding: 10px 6px; width: 64px; cursor: pointer;
+}
+.tiltbtn svg { width: 28px; height: 28px; }
+.tiltbtn .n { font-family: var(--mono); color: var(--ink-3); font-size: 11px; }
+.tiltbtn:hover:not(:disabled) { border-color: var(--accent); }
+.tiltbtn:disabled { opacity: 0.35; cursor: not-allowed; }
+@media (max-width: 480px) { .tiltbtn { width: 48px; padding: 8px 2px; font-size: 11px; } .tiltbtn .t { display: none; } }
+
+.boardwrap { width: 100%; max-width: 440px; margin: 0 auto; aspect-ratio: 1; }
+.board {
+  width: 100%; height: 100%;
+  background: var(--frame);
+  border-radius: 18px;
+  padding: 3.5%;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: 2.4%;
+  box-shadow: inset 0 -6px 0 var(--frame-edge);
+  position: relative;
+}
+.board.turning { transition: transform 0.5s cubic-bezier(.5, 0, .3, 1); }
+.cell {
+  border-radius: 50%;
+  background: var(--hole);
+  position: relative;
+  overflow: visible;
+}
+.col-hit { position: absolute; top: 0; bottom: 0; cursor: pointer; z-index: 2; background: none; border: 0; padding: 0; }
+.col-hit:focus-visible { outline: 3px solid var(--you); outline-offset: -3px; border-radius: 12px; }
+.col-hit:disabled { cursor: default; }
+.disc {
+  position: absolute; inset: 0; border-radius: 50%;
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.18);
+}
+.disc.you { background: var(--you); }
+.disc.ai { background: var(--ai); }
+.disc.ghost { opacity: 0.35; }
+.disc.fall { animation: fall var(--dur, 0.35s) cubic-bezier(.55, 0, 1, .45) both; }
+.disc.settle { animation: settle 0.3s ease-out both; }
+.disc.last::after, .disc.winning::after {
+  content: ""; position: absolute; inset: 32%; border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+}
+.disc.winning::after { inset: 22%; border-width: 3px; background: rgba(255, 255, 255, 0.35); }
+@keyframes fall { from { transform: translateY(var(--from)); } to { transform: translateY(0); } }
+@keyframes settle { from { transform: translateY(-18%); } to { transform: translateY(0); } }
+
+.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn {
+  font: inherit; font-size: 14px; font-weight: 500;
+  padding: 8px 14px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--rule); background: var(--panel); color: var(--ink);
+}
+.btn:hover:not(:disabled) { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn:focus-visible, .tiltbtn:focus-visible, select:focus-visible, summary:focus-visible { outline: 3px solid var(--you); outline-offset: 2px; }
+select { font: inherit; font-size: 14px; padding: 7px 8px; border-radius: 8px; border: 1px solid var(--rule); background: var(--panel); color: var(--ink); }
+.field { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-2); }
+
+.rules { font-size: 14px; color: var(--ink-2); margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.rules b { color: var(--ink); font-weight: 600; }
+
+/* ---------- Pensée de l'IA ---------- */
+.thought { display: grid; gap: 8px; }
+.options { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; }
+.opt { display: grid; gap: 3px; justify-items: center; font-size: 11px; color: var(--ink-3); }
+.opt .meter { width: 100%; height: 44px; background: var(--hole); border-radius: 5px; position: relative; overflow: hidden; }
+.opt .meter i { position: absolute; left: 0; right: 0; bottom: 0; background: var(--ai); opacity: 0.55; }
+.opt.chosen .meter i { opacity: 1; }
+.opt.chosen { color: var(--ink); font-weight: 600; }
+.opt .v { font-family: var(--mono); font-size: 11px; font-variant-numeric: tabular-nums; }
+.opt.na { opacity: 0.35; }
+
+/* ---------- Cerveau ---------- */
+.brain {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  padding: 20px;
+  display: grid;
+  gap: 16px;
+}
+.stats { display: flex; flex-wrap: wrap; gap: 24px; }
+.stat { display: grid; gap: 2px; }
+.stat .num { font-family: var(--mono); font-size: 26px; font-weight: 500; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.stat .sub { font-size: 12px; color: var(--ink-3); }
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px;
+  border: 1px solid var(--rule); color: var(--ink-2);
+}
+.pill .led { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); }
+.pill.on { color: var(--good); border-color: currentColor; }
+.pill.on .led { background: var(--good); animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: 0.3; } }
+
+.chartbox { position: relative; background: var(--surface-chart); border-radius: 10px; }
+.chartbox svg { display: block; width: 100%; height: 260px; touch-action: pan-y; }
+.chartbox text { font-family: var(--body); font-size: 11px; fill: var(--ink-3); }
+.chartbox .end { font-size: 12px; font-weight: 600; fill: var(--ink); }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 16px; height: 2px; border-radius: 1px; display: inline-block; }
+.tip {
+  position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--rule);
+  border-radius: 8px; padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  display: grid; gap: 3px; min-width: 150px;
+}
+.tip .row { display: flex; align-items: center; gap: 6px; }
+.tip .row i { width: 12px; height: 2px; }
+.tip strong { font-family: var(--mono); font-weight: 500; color: var(--ink); }
+.tip .h { color: var(--ink-3); }
+details { font-size: 13px; color: var(--ink-2); }
+summary { cursor: pointer; }
+.tablewrap { overflow-x: auto; max-height: 220px; overflow-y: auto; margin-top: 8px; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 4px 8px; border-bottom: 1px solid var(--rule); }
+th:first-child, td:first-child { text-align: left; }
+
+.how { display: grid; gap: 8px; font-size: 14px; color: var(--ink-2); }
+.how p { margin: 0; max-width: 65ch; }
+.how b { color: var(--ink); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  .board.turning { transition: none; }
+  .disc.fall, .disc.settle, .pill.on .led { animation: none; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="label">Une IA qui apprend en jouant contre elle-même</span>
+    <h1>Ba<span class="tilt">s</span>cule</h1>
+    <p class="lede">Un Puissance 4 sur 6×6 où chaque joueur peut, deux fois par partie, faire basculer le plateau d'un quart de tour. Tous les jetons retombent. Personne ne lui a appris à jouer : elle a découvert le jeu toute seule, partie après partie.</p>
+  </header>
+
+  <div class="main">
+    <section class="game" aria-label="Partie">
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+      <div class="stage">
+        <button class="tiltbtn" id="tiltL" type="button" aria-label="Basculer le plateau à gauche">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/></svg>
+          <span class="t">Gauche</span><span class="n" id="tiltLn"></span>
+        </button>
+        <div class="boardwrap"><div class="board" id="board"></div></div>
+        <button class="tiltbtn" id="tiltR" type="button" aria-label="Basculer le plateau à droite">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v5h-5"/></svg>
+          <span class="t">Droite</span><span class="n" id="tiltRn"></span>
+        </button>
+      </div>
+      <div class="bar">
+        <button class="btn primary" id="newGame" type="button">Nouvelle partie</button>
+        <label class="field" for="first">
+          <select id="first">
+            <option value="you">Tu commences</option>
+            <option value="ai">L'IA commence</option>
+          </select>
+        </label>
+        <label class="field" for="depth">Réflexion
+          <select id="depth">
+            <option value="1">intuition seule</option>
+            <option value="2">2 coups d'avance</option>
+            <option value="3" selected>3 coups d'avance</option>
+            <option value="4">4 coups d'avance</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="thought" id="thought" hidden>
+        <span class="label">Ce que l'IA a envisagé à son dernier coup</span>
+        <div class="options" id="options"></div>
+      </div>
+
+      <ul class="rules">
+        <li><b>Clique sur une colonne</b> pour y lâcher un jeton. Aligne-en 4 pour gagner.</li>
+        <li><b>Bascule</b> : fais pivoter le plateau à gauche ou à droite (2 fois max). Les jetons retombent et peuvent créer, ou casser, des alignements.</li>
+        <li>Une bascule qui aligne les jetons de l'adversaire le fait gagner. Si les deux sont alignés, c'est nul.</li>
+      </ul>
+    </section>
+
+    <section class="brain" aria-label="Entraînement">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <h2>Son cerveau</h2>
+        <span class="pill" id="pill"><span class="led"></span><span id="pillText">En pause</span></span>
+      </div>
+      <div class="stats">
+        <div class="stat"><span class="label">Parties contre elle-même</span><span class="num" id="games">0</span><span class="sub" id="rate">&nbsp;</span></div>
+        <div class="stat"><span class="label">Score contre le tacticien</span><span class="num" id="lastTact">–</span><span class="sub">sans réfléchir à l'avance</span></div>
+      </div>
+      <div class="bar">
+        <button class="btn primary" id="train" type="button">Continuer l'entraînement</button>
+        <button class="btn" id="reset" type="button">Repartir de zéro</button>
+        <button class="btn" id="restore" type="button">Cerveau d'origine</button>
+      </div>
+      <p id="confirmReset" class="how" hidden style="margin:0"><span>Effacer tout ce qu'elle a appris ? <button class="btn" id="confirmYes" type="button">Oui, effacer</button> <button class="btn" id="confirmNo" type="button">Annuler</button></span></p>
+
+      <div class="legend" aria-hidden="true">
+        <span><i style="background:var(--series-1)"></i>contre le tacticien</span>
+        <span><i style="background:var(--series-2)"></i>contre un joueur au hasard</span>
+      </div>
+      <div class="chartbox" id="chartbox">
+        <svg id="chart" role="img" aria-label="Score de l'IA en fonction du nombre de parties d'entraînement"></svg>
+        <div class="tip" id="tip" hidden></div>
+      </div>
+      <details>
+        <summary>Voir les mesures en tableau</summary>
+        <div class="tablewrap"><table><thead><tr><th>Parties</th><th>vs tacticien</th><th>vs hasard</th></tr></thead><tbody id="tbody"></tbody></table></div>
+      </details>
+
+      <div class="how">
+        <span class="label">Comment elle apprend</span>
+        <p><b>Au départ, son réseau de neurones est rempli de nombres au hasard.</b> Elle joue contre elle-même, et après chaque coup elle ajuste son estimation de la position précédente pour la rapprocher de la suivante. Seule la fin de partie lui dit la vérité : gagné, perdu ou nul. C'est l'apprentissage par différence temporelle, la méthode de TD-Gammon (1992) et un ingrédient d'AlphaZero.</p>
+        <p><b>Le tacticien</b> est un adversaire codé à la main : il gagne s'il peut et évite les coups qui offrent une victoire immédiate. 50 % veut dire qu'elle fait jeu égal avec lui. Le score mesure son intuition pure, sans calculer de coups d'avance.</p>
+        <p>Clique sur « Repartir de zéro » pour la voir tout réapprendre en direct. En moins d'une minute, elle passe de débutante à meilleure que le tacticien.</p>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script id="engine-src">
+/*__ENGINE__*/
+</script>
+<script>
+const BRAIN = /*__BRAIN__*/null;
+</script>
+<script id="worker-src" type="text/plain">
+let net = null, history = [], running = false;
+const rng = Bascule.makeRng((Date.now() & 0xffffffff) >>> 0);
+const evalRng = Bascule.makeRng(12345);
+let sinceReport = 0;
+
+function reportEvery() {
+  const g = net.gamesTrained;
+  return g < 3000 ? 250 : g < 20000 ? 1000 : 2500;
+}
+function report() {
+  const r = Bascule.evaluate(net, Bascule.randomPlayer, 100, { rng: evalRng });
+  const t = Bascule.evaluate(net, Bascule.tacticianPlayer, 100, { rng: evalRng });
+  const pt = { games: net.gamesTrained, vsRandom: r.score, vsTact: t.score };
+  history.push(pt);
+  postMessage({ type: 'report', history, brain: Bascule.serialize(net) });
+}
+function loop() {
+  if (!running) return;
+  const start = performance.now();
+  let n = 0;
+  while (performance.now() - start < 120) {
+    const g = net.gamesTrained;
+    const lr = Math.max(0.003, 0.01 * 20000 / (20000 + g));
+    const epsilon = 0.03 + 0.12 * Math.exp(-g / 15000);
+    Bascule.selfPlayGame(net, { lr, epsilon, rng });
+    n++; sinceReport++;
+  }
+  postMessage({ type: 'tick', games: net.gamesTrained, rate: n / ((performance.now() - start) / 1000) });
+  if (sinceReport >= reportEvery()) { sinceReport = 0; report(); }
+  setTimeout(loop, 0);
+}
+onmessage = (e) => {
+  const m = e.data;
+  if (m.cmd === 'load') { net = Bascule.deserialize(m.brain); history = m.history.slice(); sinceReport = 0; }
+  else if (m.cmd === 'reset') { net = Bascule.createNet(96, (Date.now() & 0xffff) + 1); history = []; sinceReport = 0; report(); }
+  else if (m.cmd === 'run') { const was = running; running = m.on; if (running && !was) loop(); }
+};
+</script>
+<script>
+(function () {
+  'use strict';
+  const B = window.Bascule;
+  const N = B.N;
+  const STORE_KEY = 'bascule-brain-v1';
+  const $ = (id) => document.getElementById(id);
+
+  // ---------- Cerveau : chargement ----------
+  let brain = BRAIN, history = BRAIN.history.slice();
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+    if (saved && saved.brain && saved.history) { brain = saved.brain; history = saved.history; }
+  } catch (e) { /* stockage indisponible : on garde le cerveau d'origine */ }
+  let net = B.deserialize(brain);
+
+  function persist() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify({ brain: B.serialize(net), history })); } catch (e) {}
+  }
+
+  // ---------- Worker d'entraînement ----------
+  let worker = null, training = false;
+  try {
+    const src = $('engine-src').textContent + '\n' + $('worker-src').textContent;
+    worker = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
+    worker.postMessage({ cmd: 'load', brain: B.serialize(net), history });
+    worker.onmessage = (e) => {
+      const m = e.data;
+      if (m.type === 'tick') {
+        $('games').textContent = m.games.toLocaleString('fr-FR');
+        $('rate').textContent = Math.round(m.rate) + ' parties / seconde';
+      } else if (m.type === 'report') {
+        history = m.history;
+        net = B.deserialize(m.brain);
+        persist();
+        renderBrain();
+      }
+    };
+  } catch (e) {
+    $('train').disabled = true; $('reset').disabled = true;
+    $('rate').textContent = "Entraînement indisponible dans ce navigateur";
+  }
+
+  function setTraining(on) {
+    if (!worker) return;
+    training = on;
+    worker.postMessage({ cmd: 'run', on });
+    $('train').textContent = on ? 'Mettre en pause' : "Continuer l'entraînement";
+    $('pill').classList.toggle('on', on);
+    $('pillText').textContent = on ? "S'entraîne" : 'En pause';
+    if (!on) $('rate').innerHTML = '&nbsp;';
+  }
+  $('train').addEventListener('click', () => setTraining(!training));
+  $('reset').addEventListener('click', () => { $('confirmReset').hidden = false; });
+  $('confirmNo').addEventListener('click', () => { $('confirmReset').hidden = true; });
+  $('confirmYes').addEventListener('click', () => {
+    $('confirmReset').hidden = true;
+    if (!worker) return;
+    worker.postMessage({ cmd: 'reset' });
+    setTraining(true);
+  });
+  $('restore').addEventListener('click', () => {
+    net = B.deserialize(BRAIN);
+    history = BRAIN.history.slice();
+    try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+    if (worker) worker.postMessage({ cmd: 'load', brain: BRAIN, history });
+    renderBrain();
+  });
+
+  // ---------- Graphique ----------
+  const pct = (v) => Math.round(v * 100) + ' %';
+  const fmt = (n) => n.toLocaleString('fr-FR');
+  const SERIES = [
+    { key: 'vsTact', name: 'contre le tacticien', color: 'var(--series-1)' },
+    { key: 'vsRandom', name: 'contre le hasard', color: 'var(--series-2)' },
+  ];
+  let chartGeo = null;
+
+  function niceMax(v) {
+    if (v <= 0) return 1000;
+    const p = Math.pow(10, Math.floor(Math.log10(v)));
+    for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= v) return m * p;
+    return 10 * p;
+  }
+
+  function renderChart() {
+    const svg = $('chart');
+    const W = Math.max(280, svg.clientWidth || 500), H = 260;
+    const m = { l: 40, r: 110, t: 14, b: 30 };
+    const iw = W - m.l - m.r, ih = H - m.t - m.b;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    const pts = history;
+    const xMax = niceMax(pts.length ? pts[pts.length - 1].games : 1000);
+    const x = (g) => m.l + (g / xMax) * iw;
+    const y = (v) => m.t + (1 - v) * ih;
+    let s = '';
+    for (const v of [0, 0.25, 0.5, 0.75, 1]) {
+      s += `<line x1="${m.l}" x2="${m.l + iw}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)" stroke-width="1" ${v === 0.5 ? 'stroke-dasharray="4 4" stroke="var(--ink-3)"' : ''}/>`;
+      s += `<text x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${v * 100}%</text>`;
+    }
+    s += `<text x="${m.l + iw}" y="${y(0.5) - 5}" text-anchor="end">égalité</text>`;
+    for (let i = 0; i <= 4; i++) {
+      const g = (xMax / 4) * i;
+      s += `<text x="${x(g)}" y="${H - 8}" text-anchor="middle">${g >= 1000 ? fmt(g / 1000) + ' k' : g}</text>`;
+    }
+    if (pts.length) {
+      const ends = [];
+      for (const se of SERIES) {
+        const d = pts.map((p, i) => `${i ? 'L' : 'M'}${x(p.games).toFixed(1)},${y(p[se.key]).toFixed(1)}`).join('');
+        s += `<path d="${d}" fill="none" stroke="${se.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+        const last = pts[pts.length - 1];
+        s += `<circle cx="${x(last.games)}" cy="${y(last[se.key])}" r="4" fill="${se.color}" stroke="var(--surface-chart)" stroke-width="2"/>`;
+        ends.push({ y: y(last[se.key]), label: pct(last[se.key]) + ' ' + (se.key === 'vsTact' ? 'tacticien' : 'hasard'), gx: x(last.games) });
+      }
+      // Étiquettes de fin : on les écarte si elles se chevauchent.
+      ends.sort((a, b) => a.y - b.y);
+      if (ends[1].y - ends[0].y < 14) { const mid = (ends[0].y + ends[1].y) / 2; ends[0].y = mid - 7; ends[1].y = mid + 7; }
+      for (const e of ends) s += `<text class="end" x="${e.gx + 8}" y="${e.y + 4}">${e.label}</text>`;
+    }
+    s += `<line id="xh" x1="0" x2="0" y1="${m.t}" y2="${m.t + ih}" stroke="var(--ink-3)" stroke-width="1" visibility="hidden"/>`;
+    s += `<g id="xhdots"></g>`;
+    s += `<rect id="hit" x="${m.l}" y="0" width="${iw}" height="${H}" fill="transparent"/>`;
+    svg.innerHTML = s;
+    chartGeo = { x, y, m, iw, W };
+    const hit = svg.querySelector('#hit');
+    hit.addEventListener('pointermove', onHover);
+    hit.addEventListener('pointerleave', hideTip);
+  }
+
+  function onHover(ev) {
+    if (!history.length || !chartGeo) return;
+    const svg = $('chart');
+    const rect = svg.getBoundingClientRect();
+    const scale = chartGeo.W / rect.width;
+    const px = (ev.clientX - rect.left) * scale;
+    let best = history[0], bd = Infinity;
+    for (const p of history) { const d = Math.abs(chartGeo.x(p.games) - px); if (d < bd) { bd = d; best = p; } }
+    const gx = chartGeo.x(best.games);
+    const xh = svg.querySelector('#xh');
+    xh.setAttribute('x1', gx); xh.setAttribute('x2', gx); xh.setAttribute('visibility', 'visible');
+    svg.querySelector('#xhdots').innerHTML = SERIES.map(se => `<circle cx="${gx}" cy="${chartGeo.y(best[se.key])}" r="4" fill="${se.color}" stroke="var(--surface-chart)" stroke-width="2"/>`).join('');
+    const tip = $('tip');
+    tip.replaceChildren();
+    const h = document.createElement('div'); h.className = 'h'; h.textContent = fmt(best.games) + ' parties jouées'; tip.appendChild(h);
+    for (const se of SERIES) {
+      const row = document.createElement('div'); row.className = 'row';
+      const i = document.createElement('i'); i.style.background = se.color;
+      const st = document.createElement('strong'); st.textContent = pct(best[se.key]);
+      const sp = document.createElement('span'); sp.textContent = se.name;
+      row.append(i, st, sp); tip.appendChild(row);
+    }
+    tip.hidden = false;
+    const left = gx / scale;
+    const tw = tip.offsetWidth;
+    tip.style.left = Math.min(Math.max(4, left + 12), rect.width - tw - 4) + 'px';
+    tip.style.top = '12px';
+  }
+  function hideTip() {
+    $('tip').hidden = true;
+    const svg = $('chart');
+    const xh = svg.querySelector('#xh'); if (xh) xh.setAttribute('visibility', 'hidden');
+    const dots = svg.querySelector('#xhdots'); if (dots) dots.innerHTML = '';
+  }
+
+  function renderBrain() {
+    const last = history[history.length - 1];
+    $('games').textContent = fmt(net.gamesTrained);
+    $('lastTact').textContent = last ? pct(last.vsTact) : '–';
+    const tb = $('tbody');
+    tb.replaceChildren();
+    for (const p of history.slice().reverse()) {
+      const tr = document.createElement('tr');
+      for (const v of [fmt(p.games), pct(p.vsTact), pct(p.vsRandom)]) { const td = document.createElement('td'); td.textContent = v; tr.appendChild(td); }
+      tb.appendChild(tr);
+    }
+    renderChart();
+  }
+  window.addEventListener('resize', () => renderChart());
+
+  // ---------- Partie ----------
+  let state = B.newGame();
+  let humanSide = 1;
+  let busy = false;
+  let lastCell = -1;
+  const boardEl = $('board');
+
+  function winningCells(b) {
+    const set = new Set();
+    for (const L of B.LINES) {
+      const v = b[L[0]];
+      if (v !== 0 && b[L[1]] === v && b[L[2]] === v && b[L[3]] === v) L.forEach(i => set.add(i));
+    }
+    return set;
+  }
+
+  function renderBoard(anim) {
+    boardEl.replaceChildren();
+    const wins = state.over ? winningCells(state.board) : new Set();
+    for (let r = 0; r < N; r++) {
+      for (let c = 0; c < N; c++) {
+        const i = r * N + c;
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        const v = state.board[i];
+        if (v !== 0) {
+          const d = document.createElement('div');
+          d.className = 'disc ' + (v === humanSide ? 'you' : 'ai');
+          if (i === lastCell) d.classList.add('last');
+          if (wins.has(i)) d.classList.add('winning');
+          if (anim && anim.type === 'drop' && i === anim.cell) {
+            d.classList.add('fall');
+            d.style.setProperty('--from', `calc(-${r + 1} * 109%)`);
+            d.style.setProperty('--dur', (0.18 + 0.05 * r) + 's');
+          } else if (anim && anim.type === 'settle') d.classList.add('settle');
+          cell.appendChild(d);
+        }
+        boardEl.appendChild(cell);
+      }
+    }
+    // Zones cliquables par colonne.
+    const canPlay = !state.over && state.toMove === humanSide && !busy;
+    for (let c = 0; c < N; c++) {
+      const b = document.createElement('button');
+      b.className = 'col-hit';
+      b.type = 'button';
+      b.style.left = (c / N * 100) + '%';
+      b.style.width = (100 / N) + '%';
+      b.setAttribute('aria-label', 'Lâcher un jeton dans la colonne ' + (c + 1));
+      b.disabled = !canPlay || state.board[c] !== 0;
+      b.addEventListener('click', () => humanMove(c));
+      b.addEventListener('pointerenter', () => showGhost(c));
+      b.addEventListener('pointerleave', clearGhost);
+      boardEl.appendChild(b);
+    }
+    renderStatus();
+  }
+
+  let ghostEl = null;
+  function showGhost(c) {
+    clearGhost();
+    if (state.over || state.toMove !== humanSide || busy) return;
+    let r = N - 1;
+    while (r >= 0 && state.board[r * N + c] !== 0) r--;
+    if (r < 0) return;
+    const cell = boardEl.children[r * N + c];
+    ghostEl = document.createElement('div');
+    ghostEl.className = 'disc you ghost';
+    cell.appendChild(ghostEl);
+  }
+  function clearGhost() { if (ghostEl) { ghostEl.remove(); ghostEl = null; } }
+
+  function renderStatus() {
+    const st = $('status');
+    st.className = 'status';
+    st.replaceChildren();
+    const dot = document.createElement('span'); dot.className = 'dot';
+    const txt = document.createElement('span');
+    if (state.over) {
+      if (state.winner === humanSide) { st.classList.add('win'); txt.textContent = 'Tu as gagné. Elle va apprendre de ses erreurs… si tu la laisses s’entraîner.'; }
+      else if (state.winner === 0) txt.textContent = 'Match nul.';
+      else { st.classList.add('lose'); txt.textContent = "L'IA a gagné."; }
+      st.appendChild(txt);
+    } else {
+      const you = state.toMove === humanSide;
+      dot.style.background = you ? 'var(--you)' : 'var(--ai)';
+      txt.textContent = you ? 'À toi de jouer' : "L'IA réfléchit…";
+      st.append(dot, txt);
+    }
+    const hs = String(humanSide);
+    const canTilt = !state.over && state.toMove === humanSide && !busy && state.tilts[hs] > 0 && state.moves > 0;
+    $('tiltL').disabled = !canTilt; $('tiltR').disabled = !canTilt;
+    const left = state.tilts[hs] + (state.tilts[hs] > 1 ? ' restantes' : ' restante');
+    $('tiltLn').textContent = left; $('tiltRn').textContent = left;
+  }
+
+  const wait = (ms) => new Promise(r => setTimeout(r, ms));
+  const reduceMotion = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  async function doMove(a) {
+    const prev = state;
+    const next = B.play(prev, a);
+    clearGhost();
+    if (a < B.ACT_DROP) {
+      let r = N - 1;
+      while (r >= 0 && prev.board[r * N + a] !== 0) r--;
+      lastCell = r * N + a;
+      state = next;
+      renderBoard({ type: 'drop', cell: lastCell });
+      await wait(reduceMotion() ? 50 : 380);
+    } else {
+      if (!reduceMotion()) {
+        boardEl.classList.add('turning');
+        boardEl.style.transform = `rotate(${a === B.ACT_TILT_RIGHT ? 90 : -90}deg)`;
+        await wait(520);
+        boardEl.classList.remove('turning');
+        boardEl.style.transform = '';
+      }
+      lastCell = -1;
+      state = next;
+      renderBoard({ type: 'settle' });
+      await wait(reduceMotion() ? 50 : 320);
+    }
+  }
+
+  async function humanMove(a) {
+    if (busy || state.over || state.toMove !== humanSide) return;
+    if (!B.legalActions(state).includes(a)) return;
+    busy = true;
+    await doMove(a);
+    busy = false;
+    renderBoard();
+    if (!state.over) aiTurn();
+  }
+
+  const ACTION_LABEL = ['1', '2', '3', '4', '5', '6', '↶', '↷'];
+
+  async function aiTurn() {
+    busy = true;
+    renderStatus();
+    await wait(250);
+    const depth = parseInt($('depth').value, 10);
+    const res = B.chooseAction(net, state, { depth });
+    showThought(res);
+    await doMove(res.action);
+    busy = false;
+    renderBoard();
+  }
+
+  function showThought(res) {
+    const box = $('options');
+    box.replaceChildren();
+    for (let a = 0; a < B.NUM_ACTIONS; a++) {
+      const o = document.createElement('div'); o.className = 'opt';
+      const meter = document.createElement('div'); meter.className = 'meter';
+      const fill = document.createElement('i');
+      const v = document.createElement('span'); v.className = 'v';
+      const lab = document.createElement('span');
+      lab.textContent = a < B.ACT_DROP ? 'col. ' + ACTION_LABEL[a] : (a === B.ACT_TILT_LEFT ? '↶ gauche' : '↷ droite');
+      if (res.scores && a in res.scores) {
+        const p = (res.scores[a] + 1) / 2;
+        fill.style.height = Math.max(3, p * 100) + '%';
+        v.textContent = Math.round(p * 100) + '%';
+        if (a === res.action) o.classList.add('chosen');
+      } else { o.classList.add('na'); v.textContent = '–'; }
+      meter.appendChild(fill);
+      o.append(meter, v, lab);
+      o.title = 'Chances de gagner estimées par l’IA si elle joue ce coup';
+      box.appendChild(o);
+    }
+    $('thought').hidden = false;
+  }
+
+  function newGame() {
+    if (busy) return;
+    state = B.newGame();
+    lastCell = -1;
+    humanSide = $('first').value === 'ai' ? -1 : 1;
+    $('thought').hidden = true;
+    renderBoard();
+    if (state.toMove !== humanSide) aiTurn();
+  }
+  $('newGame').addEventListener('click', newGame);
+  $('first').addEventListener('change', newGame);
+  $('tiltL').addEventListener('click', () => humanMove(B.ACT_TILT_LEFT));
+  $('tiltR').addEventListener('click', () => humanMove(B.ACT_TILT_RIGHT));
+
+  renderBoard();
+  renderBrain();
+  $('games').textContent = fmt(net.gamesTrained);
+})();
+</script>
